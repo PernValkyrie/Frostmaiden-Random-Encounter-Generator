@@ -67,6 +67,7 @@
   <h1>🧊 Frostmaiden Day Generator</h1>
   <button onclick="generateDay()">Generate Day</button>
   <pre id="output"></pre>
+
   <script>
     let snowInterval = null;
 
@@ -144,6 +145,7 @@
 
       return table[rollResult];
     }
+
     function generateDay() {
       stopSnow();
       const encounterRoll = roll(20);
@@ -186,7 +188,9 @@
           const hour = parseInt(chosenTime);
           const startHour = Math.max(0, hour - roll(3));
           const duration = Math.max(2, roll(4) + roll(4));
-          blizzardTime = `${String(startHour).padStart(2, "0")}:00`;
+          const hour12 = startHour % 12 || 12;
+          const ampm = startHour < 12 ? "am" : "pm";
+          blizzardTime = `${hour12}${ampm}`;
           blizzardDuration = duration;
         } else {
           const block = timeBlocks[roll(4) - 1];
