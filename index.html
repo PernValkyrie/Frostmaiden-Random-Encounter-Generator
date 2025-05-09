@@ -2,37 +2,55 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
-  <title>Frostmaiden Day Generator</title>
+  <title>Frostmaiden Random Encounter Generator</title>
   <style>
     body {
-      font-family: sans-serif;
-      background-color: #1e3c72;
+      font-family: monospace;
+      background: linear-gradient(to bottom, #003366, #1a1a40);
       color: #e0f7fa;
       text-align: center;
-      padding: 2em;
-      overflow: hidden;
-      position: relative;
+      padding: 20px;
     }
 
-    #snow {
-      position: fixed;
-      top: 0;
-      left: 0;
-      width: 100%;
-      height: 100%;
-      pointer-events: none;
-      z-index: 999;
+    h1 {
+      color: #bbdefb;
+      margin-bottom: 10px;
+    }
+
+    button {
+      background-color: #0288d1;
+      color: white;
+      border: none;
+      padding: 10px 20px;
+      font-size: 1.2em;
+      border-radius: 8px;
+      cursor: pointer;
+    }
+
+    button:hover {
+      background-color: #0277bd;
+    }
+
+    #log {
+      background: rgba(0, 0, 0, 0.4);
+      border: 2px solid #81d4fa;
+      margin-top: 20px;
+      padding: 15px;
+      text-align: left;
+      max-width: 800px;
+      margin-left: auto;
+      margin-right: auto;
+      height: 500px;
+      overflow-y: scroll;
+      white-space: pre-wrap;
     }
 
     .snowflake {
-      position: absolute;
+      position: fixed;
       top: -10px;
-      width: 10px;
-      height: 10px;
-      background: white;
-      border-radius: 50%;
-      opacity: 0.8;
-      animation: fall linear infinite;
+      color: #fff;
+      font-size: 1em;
+      animation: fall 10s linear infinite;
     }
 
     @keyframes fall {
@@ -40,171 +58,205 @@
         transform: translateY(100vh);
       }
     }
-
-    button {
-      font-size: 1rem;
-      padding: 0.8em 1.5em;
-      border: none;
-      background-color: #00bcd4;
-      color: white;
-      border-radius: 10px;
-      cursor: pointer;
-      margin: 0.5em;
-    }
-
-    pre {
-      text-align: left;
-      margin-top: 2em;
-      background-color: rgba(255, 255, 255, 0.1);
-      padding: 1em;
-      border-radius: 1em;
-      white-space: pre-wrap;
-    }
   </style>
 </head>
 <body>
-  <div id="snow"></div>
-  <h1>🧊 Frostmaiden Day Generator</h1>
-  <button onclick="generateDay()">Generate Day</button>
-  <pre id="output"></pre>
+  <h1>Frostmaiden Random Encounter Generator</h1>
+  <button onclick="generate()">Generate New Day</button>
+  <div id="log"></div>
 
   <script>
-    let snowInterval = null;
+    const logDiv = document.getElementById("log");
 
-    function roll(sides, times = 1) {
-      let results = [];
+    function roll(die, times = 1) {
+      let rolls = [];
       for (let i = 0; i < times; i++) {
-        results.push(Math.floor(Math.random() * sides) + 1);
+        rolls.push(Math.floor(Math.random() * die) + 1);
       }
-      return times === 1 ? results[0] : results;
+      return times === 1 ? rolls[0] : rolls;
     }
 
-    function resolveTime(period) {
-      const timeMap = {
-        morning: ["6am", "7am", "8am", "9am", "10am", "11am"],
-        afternoon: ["12pm", "1pm", "2pm", "3pm", "4pm", "5pm"],
-        evening: ["6pm", "7pm", "8pm", "9pm", "10pm", "11pm"],
-        night: ["12am", "1am", "2am", "3am", "4am", "5am"]
-      };
-      return timeMap[period][roll(6) - 1];
+    function log(text) {
+      logDiv.innerText += text + "\n";
     }
 
-    function createSnowflake() {
-      const snowflake = document.createElement("div");
-      snowflake.classList.add("snowflake");
-      snowflake.style.left = `${Math.random() * 100}vw`;
-      snowflake.style.animationDuration = `${5 + Math.random() * 5}s`;
-      snowflake.style.opacity = Math.random();
-      snowflake.style.fontSize = `${Math.random() * 10 + 10}px`;
-      document.getElementById("snow").appendChild(snowflake);
-      setTimeout(() => snowflake.remove(), 10000);
-    }
-
-    function startSnow() {
-      stopSnow();
-      snowInterval = setInterval(createSnowflake, 200);
-    }
-
-    function stopSnow() {
-      clearInterval(snowInterval);
-      document.getElementById("snow").innerHTML = "";
-    }
-
-    function getEncounter(blizzard) {
-      const rollResult = (() => {
-        while (true) {
-          let r = roll(20);
-          if (r === 1 && !blizzard) continue;
-          if (r === 20 && blizzard) continue;
-          return r;
-        }
-      })();
-
-      const table = {
-        1: "Yeti",
-        2: "Goliath werebear",
-        3: "Crag cats",
-        4: "Coldlight walker",
-        5: "Ice troll",
-        6: "Frost druid and friends",
-        7: "Chardalyn berserkers",
-        8: "Frost giant riding a mammoth",
-        9: "Battlehammer dwarves",
-        10: "Arveiaturace (ancient white dragon)",
-        11: "Snowy owlbear",
-        12: "Gnolls",
-        13: "Orcs of the Many-Arrows tribe",
-        14: "Goliath party",
-        15: "Chwinga",
-        16: "Awakened beast",
-        17: "Icewind kobolds",
-        18: "Humans",
-        19: "Herd of beasts",
-        20: "Perytons"
-      };
-
-      return table[rollResult];
-    }
-
-    function generateDay() {
-      stopSnow();
-      const encounterRoll = roll(20);
-      const weatherRoll = roll(20) + 1;
-      const blizzard = weatherRoll > encounterRoll;
-      const timeBlocks = ["morning", "afternoon", "evening", "night"];
-      let blizzardTime = null;
-      let blizzardDuration = null;
-      let encounterTimes = [];
-
-      const d8 = roll(8);
-      let output = `🎲 Encounter d20: ${encounterRoll}\n🌡️ Weather d20+1: ${weatherRoll}\n`;
-      output += `\n⚔️ Encounter Roll (d8): ${d8}\n`;
-
-      function recordEncounter(time, label, desc) {
-        encounterTimes.push(time);
-        output += `• ${time} (${label}) — ${desc}\n`;
+    function snowfall(enable) {
+      document.querySelectorAll('.snowflake').forEach(e => e.remove());
+      if (!enable) return;
+      for (let i = 0; i < 100; i++) {
+        const snowflake = document.createElement("div");
+        snowflake.className = "snowflake";
+        snowflake.style.left = `${Math.random() * 100}vw`;
+        snowflake.style.animationDuration = `${5 + Math.random() * 5}s`;
+        snowflake.style.fontSize = `${Math.random() * 10 + 10}px`;
+        snowflake.innerHTML = "❄️";
+        document.body.appendChild(snowflake);
       }
+    }
 
-      if (d8 >= 1 && d8 <= 4) {
-        const label = timeBlocks[d8 - 1];
-        const time = resolveTime(label);
-        recordEncounter(time, label, getEncounter(blizzard));
-      } else if (d8 <= 6) {
-        const labels = [timeBlocks[roll(4) - 1], timeBlocks[roll(4) - 1]];
-        const times = [resolveTime(labels[0]), resolveTime(labels[1])];
-        while (labels[0] === labels[1] && times[0] === times[1]) times[1] = resolveTime(labels[1]);
-        recordEncounter(times[0], labels[0], getEncounter(blizzard));
-        recordEncounter(times[1], labels[1], getEncounter(blizzard));
+    const hourSlots = {
+      morning: ["6am", "7am", "8am", "9am", "10am", "11am"],
+      afternoon: ["12pm", "1pm", "2pm", "3pm", "4pm", "5pm"],
+      evening: ["6pm", "7pm", "8pm", "9pm", "10pm", "11pm"],
+      night: ["12am", "1am", "2am", "3am", "4am", "5am"]
+    };
+
+    function parseHourString(hourStr) {
+      let [_, hour, meridian] = hourStr.match(/(\d+)(am|pm)/);
+      let h = parseInt(hour);
+      if (meridian === 'pm' && h !== 12) h += 12;
+      if (meridian === 'am' && h === 12) h = 0;
+      return h;
+    }
+
+    function hourToString(h) {
+      let meridian = h >= 12 ? "pm" : "am";
+      let hr = h % 12 === 0 ? 12 : h % 12;
+      return `${hr}${meridian}`;
+    }
+
+    function getTimeSlot(slot) {
+      let r = roll(6);
+      let hour = hourSlots[slot][r - 1];
+      log(`  Rolled d6 for hour (${slot}): ${r} → ${hour}`);
+      return hour;
+    }
+
+    function generate() {
+      logDiv.innerText = "";
+      log("=== New Frostmaiden Day ===");
+
+      let encounterRoll = roll(8);
+      log(`Rolled d8 for encounter quantity: ${encounterRoll}`);
+
+      let encounters = [];
+      if (encounterRoll >= 1 && encounterRoll <= 4) {
+        let slot = ["morning", "afternoon", "evening", "night"][encounterRoll - 1];
+        let time = getTimeSlot(slot);
+        encounters.push({ slot, time });
+        log(`→ One encounter scheduled: ${slot} at ${time}`);
+      } else if (encounterRoll === 5 || encounterRoll === 6) {
+        let slot1 = ["morning", "afternoon", "evening", "night"][roll(4) - 1];
+        let time1 = getTimeSlot(slot1);
+        let slot2, time2;
+        do {
+          slot2 = ["morning", "afternoon", "evening", "night"][roll(4) - 1];
+          time2 = getTimeSlot(slot2);
+        } while (slot1 === slot2 && time1 === time2);
+        encounters.push({ slot: slot1, time: time1 });
+        encounters.push({ slot: slot2, time: time2 });
+        log(`→ Two encounters scheduled:`);
+        log(`   1. ${slot1} at ${time1}`);
+        log(`   2. ${slot2} at ${time2}`);
       } else {
-        output += `• No encounters today.\n`;
+        log("→ No encounters today.");
       }
+
+      let weatherRoll = roll(20);
+      let blizzardCheck = roll(20) + 1;
+      log(`Rolled d20 for encounter weather: ${weatherRoll}`);
+      log(`Rolled d20+1 for blizzard threshold: ${blizzardCheck}`);
+      let blizzard = blizzardCheck > weatherRoll;
 
       if (blizzard) {
-        let chosenTime = null;
+        snowfall(true);
+        let duration = roll(4) + roll(4);
+        let startHour = 0;
 
-        if (encounterTimes.length > 0) {
-          const chosenIndex = encounterTimes.length === 1 ? 0 : roll(2) - 1;
-          chosenTime = encounterTimes[chosenIndex];
-          const hour = parseInt(chosenTime);
-          const startHour = Math.max(0, hour - roll(3));
-          const duration = Math.max(2, roll(4) + roll(4));
-          const hour12 = startHour % 12 || 12;
-          const ampm = startHour < 12 ? "am" : "pm";
-          blizzardTime = `${hour12}${ampm}`;
-          blizzardDuration = duration;
+        if (encounters.length > 0) {
+          let pick = roll(encounters.length);
+          let target = encounters[pick - 1];
+          let encHour = parseHourString(target.time);
+          do {
+            startHour = parseHourString(getTimeSlot(target.slot));
+          } while (startHour > encHour);
+
+          let endHour = Math.max(encHour + 1, startHour + duration);
+          log(`🌨️ Blizzard occurs!`);
+          log(`  Tied to Encounter ${pick} (${target.slot} at ${target.time})`);
+          log(`  Rolled 2d4 for duration: ${duration} hours`);
+          log(`  Blizzard starts at ${hourToString(startHour)}, ends at ${hourToString(endHour)}.`);
         } else {
-          const block = timeBlocks[roll(4) - 1];
-          blizzardTime = `${resolveTime(block)} (${block})`;
-          blizzardDuration = roll(4) + roll(4);
+          let slotIndex = roll(4);
+          let slot = ["morning", "afternoon", "evening", "night"][slotIndex - 1];
+          let start = getTimeSlot(slot);
+          let startHour = parseHourString(start);
+          let endHour = startHour + duration;
+          log(`🌨️ Blizzard occurs!`);
+          log(`  Rolled d4 for slot: ${slotIndex} → ${slot}`);
+          log(`  Rolled 2d4 for duration: ${duration} hours`);
+          log(`  Blizzard starts at ${start}, ends at ${hourToString(endHour)}.`);
         }
-
-        output = `🌪️ Blizzard: YES\n🕒 Start Time: ${blizzardTime}\n⏳ Duration: ${blizzardDuration} hours\n\n` + output;
-        startSnow();
       } else {
-        output = `🌪️ Blizzard: NO\n\n` + output;
+        snowfall(false);
+        log("No blizzard today.");
       }
 
-      document.getElementById("output").innerText = output;
+      // Encounters
+      if (encounters.length > 0) {
+        encounters.forEach((enc, i) => {
+          log(`\n--- Encounter ${i + 1} ---`);
+          log(`Time: ${enc.slot} at ${enc.time}`);
+          let typeRoll;
+          do {
+            typeRoll = roll(20);
+            log(`Rolled d20 for encounter type: ${typeRoll}`);
+            if (typeRoll === 1 && !blizzard) log("→ Yeti requires blizzard, rerolling...");
+            if (typeRoll === 20 && blizzard) log("→ Perytons require clear skies, rerolling...");
+          } while ((typeRoll === 1 && !blizzard) || (typeRoll === 20 && blizzard));
+
+          const creatures = {
+            1: () => {
+              let r = roll(6);
+              let type = ["Yeti", "Yeti", "Yeti", "Abominable Yeti", "Abominable Yeti", "Yeti Tyke"][r - 1];
+              let count = type === "Yeti" ? roll(4) : 1;
+              return `${type}${count > 1 ? " x" + count : ""}`;
+            },
+            2: () => ["Random Werebear", "Oyaminartok"][roll(2) - 1],
+            3: () => `Crag Cats x${roll(4)}`,
+            4: () => "Coldlight Walker",
+            5: () => "Ice Troll",
+            6: () => `Frost Druid + ${["Awakened Tree", "Goat", "Reindeer", "Walrus"][roll(4) - 1]}`,
+            7: () => `Chardalyn Berserkers x${roll(4) + 1}`,
+            8: () => "Frost Giant on Mammoth",
+            9: () => `Battlehammer Dwarves x${roll(6) + 2}`,
+            10: () => "Arveiaturace (Ancient White Dragon)",
+            11: () => "Snowy Owlbear",
+            12: () => `Gnolls x${roll(4) + 3}`,
+            13: () => "Orcs of the Many-Arrows",
+            14: () => ["Skytower Goliaths", `Wyrmdoom (Game: ${["Tug o' War", "Hand Standing", "Shrub Pulling", "Boulder Roll"][roll(4) - 1]})`][roll(2) - 1],
+            15: () => "Chwinga",
+            16: () => `Awakened ${["Polar Bear", "Arctic Fox", "Hare", "Snowy Owl", "Reindeer", "Wooly Rhino", "Saber-Tooth", "Wolf"][roll(8) - 1]}`,
+            17: () => `Kobolds x${roll(4) + roll(4)} (${["Lost", "Searching"][roll(2) - 1]})`,
+            18: () => {
+              let who = roll(2);
+              if (who === 1) return `Ten-Towners x${roll(6) + 4}`;
+              else {
+                let tribeRoll = roll(20);
+                let tribe = tribeRoll <= 5 ? "Bear" : tribeRoll <= 13 ? "Elk" : tribeRoll <= 17 ? "Tiger" : "Wolf";
+                return `Reghed Tribe (${tribe}) x${roll(6) + 4}`;
+              }
+            },
+            19: () => {
+              let sea = roll(6);
+              let seaType = sea === 1 ? `Killer Whales x${roll(6) + roll(6) + roll(6)}` :
+                sea <= 4 ? `Seals x${[...Array(6)].map(() => roll(6)).reduce((a, b) => a + b)}` :
+                `Walruses x${roll(6) + roll(6) + roll(6) + roll(6)}`;
+              let land = roll(6);
+              let landType = land <= 2 ? `Elk x${roll(6) + roll(6) + roll(6) + roll(6)}` :
+                land <= 4 ? `Mammoths x${roll(6) + roll(6) + roll(6)}` :
+                `Reindeer x${roll(6) * 5}`;
+              return `Herds – Sea: ${seaType}, Land: ${landType}`;
+            },
+            20: () => "Perytons"
+          };
+
+          let result = creatures[typeRoll]();
+          log(`→ Encounter: ${result}`);
+        });
+      }
+
+      log("\n=== End of Day ===");
     }
   </script>
 </body>
