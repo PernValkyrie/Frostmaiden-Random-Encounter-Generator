@@ -1,4 +1,3 @@
-
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -14,7 +13,6 @@
       overflow: hidden;
       position: relative;
     }
-
     #snow {
       position: fixed;
       top: 0;
@@ -24,7 +22,6 @@
       pointer-events: none;
       z-index: 999;
     }
-
     .snowflake {
       position: absolute;
       top: -10px;
@@ -35,13 +32,11 @@
       opacity: 0.8;
       animation: fall linear infinite;
     }
-
     @keyframes fall {
       to {
         transform: translateY(100vh);
       }
     }
-
     button {
       font-size: 1rem;
       padding: 0.8em 1.5em;
@@ -52,7 +47,6 @@
       cursor: pointer;
       margin: 0.5em;
     }
-
     pre {
       text-align: left;
       margin-top: 2em;
@@ -65,10 +59,8 @@
 </head>
 <body>
   <div id="snow"></div>
-
   <h1>🧊 Frostmaiden Day Generator</h1>
   <button onclick="generateDay()">Generate Day</button>
-
   <pre id="output"></pre>
 
   <script>
@@ -113,59 +105,8 @@
       document.getElementById("snow").innerHTML = "";
     }
 
-    function getDetailedEncounter(encounter, blizzard) {
-      if (encounter === "Yeti" && !blizzard) return getBasicEncounter(true);
-      if (encounter === "Yeti") {
-        const yetiRoll = roll(6);
-        if (yetiRoll <= 3) return `Yeti (${roll(4)})`;
-        if (yetiRoll <= 5) return "Abominable Yeti";
-        return "Yeti Tyke";
-      }
-      if (encounter === "Arveiaturace (ancient white dragon)") {
-        return "Arveiaturace (ancient white dragon)";
-      }
-      // Add remaining encounter detail logic here as needed
-      return encounter;
-    }
-
-    function getBasicEncounter(blizzard) {
-      let rollResult;
-      while (true) {
-        rollResult = roll(20);
-        if (rollResult === 1 && !blizzard) continue;
-        if (rollResult === 20 && blizzard) continue;
-        break;
-      }
-
-      const table = {
-        1: "Yeti",
-        2: "Goliath werebear",
-        3: "Crag cats",
-        4: "Coldlight walker",
-        5: "Ice troll",
-        6: "Frost druid and friends",
-        7: "Chardalyn berserkers",
-        8: "Frost giant riding a mammoth",
-        9: "Battlehammer dwarves",
-        10: "Arveiaturace (ancient white dragon)",
-        11: "Snowy owlbear",
-        12: "Gnolls",
-        13: "Orcs of the Many-Arrows tribe",
-        14: "Goliath party",
-        15: "Chwinga",
-        16: "Awakened beast",
-        17: "Icewind kobolds",
-        18: "Humans",
-        19: "Herd of beasts",
-        20: "Perytons"
-      };
-
-      return getDetailedEncounter(table[rollResult], blizzard);
-    }
-
     function generateDay() {
-      stopSnow(); // clear previous flakes
-
+      stopSnow();
       const encounterRoll = roll(20);
       const weatherRoll = roll(20) + 1;
       const blizzard = weatherRoll > encounterRoll;
@@ -173,38 +114,60 @@
       const timeBlocks = ["morning", "afternoon", "evening", "night"];
       let blizzardTime = null;
       let blizzardDuration = null;
-      if (blizzard) {
-        const block = timeBlocks[roll(4) - 1];
-        blizzardTime = `${resolveTime(block)} (${block})`;
-        blizzardDuration = roll(4) + roll(4);
-        startSnow(); // only start snow if it's a blizzard
-      }
-
-      let output = `🎲 Encounter d20: ${encounterRoll}\n🌡️ Weather d20+1: ${weatherRoll}\n`;
-      output += blizzard
-        ? `🌪️ Blizzard: YES\n🕒 Start Time: ${blizzardTime}\n⏳ Duration: ${blizzardDuration} hours\n`
-        : `🌪️ Blizzard: NO\n`;
+      let encounterTimes = [];
 
       const d8 = roll(8);
+      let output = `🎲 Encounter d20: ${encounterRoll}\n🌡️ Weather d20+1: ${weatherRoll}\n`;
       output += `\n⚔️ Encounter Roll (d8): ${d8}\n`;
 
+      function recordEncounter(time, label, desc) {
+        encounterTimes.push(time);
+        output += `• ${time} (${label}) — ${desc}\n`;
+      }
+
+      function getEncounter() {
+        return "Some encounter"; // Placeholder — replace with your logic
+      }
+
       if (d8 >= 1 && d8 <= 4) {
-        const block = timeBlocks[d8 - 1];
-        const hour = resolveTime(block);
-        const encounter = getBasicEncounter(blizzard);
-        output += `• ${hour} (${block}) — ${encounter}\n`;
+        const label = timeBlocks[d8 - 1];
+        const time = resolveTime(label);
+        recordEncounter(time, label, getEncounter());
       } else if (d8 <= 6) {
-        const t1 = timeBlocks[roll(4) - 1];
-        const t2 = timeBlocks[roll(4) - 1];
-        let h1 = resolveTime(t1);
-        let h2 = resolveTime(t2);
-        while (t1 === t2 && h1 === h2) h2 = resolveTime(t2);
-        const e1 = getBasicEncounter(blizzard);
-        const e2 = getBasicEncounter(blizzard);
-        output += `• ${h1} (${t1}) — ${e1}\n`;
-        output += `• ${h2} (${t2}) — ${e2}\n`;
+        const labels = [timeBlocks[roll(4) - 1], timeBlocks[roll(4) - 1]];
+        const times = [resolveTime(labels[0]), resolveTime(labels[1])];
+        while (labels[0] === labels[1] && times[0] === times[1]) times[1] = resolveTime(labels[1]);
+        recordEncounter(times[0], labels[0], getEncounter());
+        recordEncounter(times[1], labels[1], getEncounter());
       } else {
         output += `• No encounters today.\n`;
+      }
+
+      // Determine blizzard timing
+      if (blizzard) {
+        let chosenTime = null;
+
+        if (encounterTimes.length > 0) {
+          const chosenIndex = encounterTimes.length === 1 ? 0 : roll(2) - 1;
+          chosenTime = encounterTimes[chosenIndex];
+          const hour = parseInt(chosenTime);
+          const startHour = Math.max(0, hour - roll(3));
+          const duration = Math.max(2, roll(4) + roll(4));
+          const endHour = startHour + duration;
+
+          blizzardTime = `${String(startHour).padStart(2, "0")}:00`;
+          blizzardDuration = duration;
+
+        } else {
+          const block = timeBlocks[roll(4) - 1];
+          blizzardTime = `${resolveTime(block)} (${block})`;
+          blizzardDuration = roll(4) + roll(4);
+        }
+
+        output = `🌪️ Blizzard: YES\n🕒 Start Time: ${blizzardTime}\n⏳ Duration: ${blizzardDuration} hours\n\n` + output;
+        startSnow();
+      } else {
+        output = `🌪️ Blizzard: NO\n\n` + output;
       }
 
       document.getElementById("output").innerText = output;
